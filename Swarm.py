@@ -1,5 +1,6 @@
 import math
 import numpy as np # numpy so we go brr
+from matplotlib import pyplot as plt
 # The Swarm object for the optimization algo
 # Needs a population, will spawn randomly in a given region defined by origin +/- distance
 # distance will actually just set the standard deviation of a guassian distribution with mean 0.
@@ -56,4 +57,15 @@ class Swarm:
         if self.function(self.swarmsBestPos) > np.min(evals):
             index = np.argmin(evals)
             self.swarmsBestPos = self.swarmPos[:, index]
+
+    # 2D functions only!
+    def visualise(self):
+        plt.figure(0)
+        plt.clf()
+        plt.quiver(self.swarmPos[0,:], self.swarmPos[1, :], self.swarmVel[0,:], self.swarmVel[1,:])
+
+        #plt.xlim(-5, 5)
+        #plt.ylim(-5,5)
+        plt.draw()
+        plt.pause(0.1)
 
