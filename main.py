@@ -12,7 +12,7 @@ opt = Swarm(100, [1,1], 3, booth, 2)
 
 for i in range(100):
     opt.iterate([0.9, 0.9], [0.4, 0.4],[0.2, 0.2])
-    #opt.visualise()
+    opt.visualise()
 
 print(opt.swarmsBestPos)
 print(ackley(opt.swarmsBestPos))
