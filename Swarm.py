@@ -16,6 +16,7 @@ class Swarm:
         self.distance = distance
         self.population = population
         self.swarmsBestPos = np.array(origin)
+        self.swarmsBestVal = self.function(origin)
         assert(params == len(origin))
         self.swarm = dict()
         self.swarmPos = np.random.randn(params,population)*distance
@@ -23,6 +24,11 @@ class Swarm:
             self.swarmPos[i, :] += origin[i]
         self.swarmVel = np.zeros((params,population))
         self.swarmIndivBests = np.copy(self.swarmPos)
+        self.swarmIndivBestVals = np.zeros(self.population)
+        for i in range(self.population):
+            self.swarmIndivBestVals[i] = self.function(self.swarmIndivBests[:,i])
+
+
         # now swarm is generated, guess i should add iterations
 
     # All weighting arrays
@@ -49,14 +55,14 @@ class Swarm:
         evals = np.zeros(self.population)
         for i in range(self.population):
             evals[i] = self.function(self.swarmPos[:, i])
-            # TODO cache the bests so we dont have to do another function call
-            if self.function(self.swarmIndivBests[:,i]) > evals[i]:
+            if self.swarmIndivBestVals[i] > evals[i]:
                 self.swarmIndivBests[:, i] = self.swarmPos[:, i]
+                self.swarmIndivBestVals[i] = self.function(self.swarmIndivBests[:,i])
 
-        # TODO again, cache this
-        if self.function(self.swarmsBestPos) > np.min(evals):
+        if self.swarmsBestVal > np.min(evals):
             index = np.argmin(evals)
             self.swarmsBestPos = self.swarmPos[:, index]
+            self.swarmsBestVal = self.function(self.swarmsBestPos)
 
     # 2D functions only!
     def visualise(self):

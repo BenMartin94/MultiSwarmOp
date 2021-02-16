@@ -13,6 +13,7 @@ def manageWorker(connection):
     global inpt
     global start
     global OPT
+    global ALLRESULTS
     # TODO maybe set up an observer design pattern to only send when a change is detected
     connection.sendall(b'Hey worker, standby')
     try:
@@ -25,7 +26,10 @@ def manageWorker(connection):
                 connection.sendall(randStart.encode('utf-8'))
                 time.sleep(5)
                 results = (connection.recv(1024))
-                print(results.decode('utf-8'))
+                results = results.decode('utf-8')
+                print(results) # TODO delete me
+                results = results.split(' ')
+                ALLRESULTS[tuple(results[0:-1])] = results[-1]
             time.sleep(1)
     except:
         # something happened, down a worker
@@ -66,6 +70,7 @@ OPT = '1'
 IDLE = '0'
 WORKERS = '2'
 ALLTHREADS = []
+ALLRESULTS = {}
 activeWorkers = 0
 start = '-0 -0'
 listener = threading.Thread(target=listen)
@@ -84,11 +89,16 @@ while inpt != 'q':
             continue
         start = input("Enter starting coordinates (ints only right now)")
         print("Ordering workers, just wait")
-        time.sleep(5)
-        # TODO, find the best result of the given results
+        time.sleep(2)
         print("Workers should be goin hard")
         inpt = IDLE
         start = '-0 -0'
+        while len(ALLRESULTS)<activeWorkers:
+            # results not rdy
+            time.sleep(0.5)
+        print('This is what the workers found')
+        print(ALLRESULTS)
+        ALLRESULTS = {}
     elif inpt == WORKERS:
         print("There are " + str(activeWorkers) + ' workers connected')
         inpt = IDLE
