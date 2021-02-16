@@ -42,7 +42,7 @@ def randomize(given):
     toRet = ''
     for i in range(len(given)):
         possiblities = [int(given[i])*0.5, int(given[i])*1.5]
-        given[i] = int(random.randrange(min(possiblities), max(possiblities)))
+        given[i] = int(random.randrange(int(min(possiblities)), int(max(possiblities))))
         toRet += str(given[i]) + ' '
 
     toRet = toRet[0:-1]
