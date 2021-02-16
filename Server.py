@@ -6,7 +6,7 @@ import random
 import traceback
 workers = []
 HOST = '192.168.0.7'
-PORT = 9998
+PORT = 9999
 
 def manageWorker(connection):
     global activeWorkers
@@ -27,7 +27,7 @@ def manageWorker(connection):
                 time.sleep(5)
                 results = (connection.recv(1024))
                 results = results.decode('utf-8')
-                print(results) # TODO delete me
+                # print(results) # TODO delete me
                 results = results.split(' ')
                 ALLRESULTS[tuple(results[0:-1])] = results[-1]
             time.sleep(1)
@@ -97,7 +97,8 @@ while inpt != 'q':
             # results not rdy
             time.sleep(0.5)
         print('This is what the workers found')
-        print(ALLRESULTS)
+        for key in ALLRESULTS:
+            print("f" + str(key)+" = " + str(ALLRESULTS[key]))
         ALLRESULTS = {}
     elif inpt == WORKERS:
         print("There are " + str(activeWorkers) + ' workers connected')
