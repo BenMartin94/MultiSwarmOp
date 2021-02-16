@@ -3,6 +3,7 @@ import time
 import threading
 import numpy
 import random
+import traceback
 workers = []
 HOST = '192.168.0.7'
 PORT = 9998
@@ -24,10 +25,11 @@ def manageWorker(connection):
                 connection.sendall(randStart.encode('utf-8'))
                 time.sleep(5)
                 results = (connection.recv(1024))
-                print(numpy.frombuffer(results))
+                print(results.decode('utf-8'))
             time.sleep(1)
     except:
         # something happened, down a worker
+        traceback.print_exc()
         print("Thread crashed closing client connection")
         activeWorkers = activeWorkers-1
 
@@ -35,7 +37,8 @@ def randomize(given):
     given = given.split(' ')
     toRet = ''
     for i in range(len(given)):
-        given[i] = int(random.randrange(int(given[i])*0.5, int(given[i])*1.5))
+        possiblities = [int(given[i])*0.5, int(given[i])*1.5]
+        given[i] = int(random.randrange(min(possiblities), max(possiblities)))
         toRet += str(given[i]) + ' '
 
     toRet = toRet[0:-1]
@@ -82,6 +85,7 @@ while inpt != 'q':
         start = input("Enter starting coordinates (ints only right now)")
         print("Ordering workers, just wait")
         time.sleep(5)
+        # TODO, find the best result of the given results
         print("Workers should be goin hard")
         inpt = IDLE
         start = '-0 -0'
