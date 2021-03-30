@@ -4,6 +4,7 @@ import threading
 import numpy as np
 import random
 import traceback
+from function import function
 workers = []
 HOST = '10.0.1.12'
 PORT = 9999
@@ -72,16 +73,17 @@ def computeDrift(myId):
     for i in range(dims):
         toRet.append(0)
     if myId % 2 == 0:
+        dest = None
+        myMin = np.inf
         for bests in list(ALLPOSITIONS.values()):
-            for i in range(dims):
-                toRet[i] += bests[i]
-        for i in range(dims):
-            toRet[i] = toRet[i]/len(list(ALLPOSITIONS.keys()))
-        dest = np.array(toRet)
+            if function(bests[0:dims])<myMin:
+                myMin = function(bests[0:dims])
+                dest = np.array(bests[0:dims])
+
         org = np.array(ALLPOSITIONS[myId][dims:dims*2])
         distance = np.linalg.norm(dest-org, dims)
         for i in range(dims):
-            toRet[i] = (dest[i] - org[i])/distance
+            toRet[i] = (dest[i] - org[i])
 
     else:
         for pos in list(ALLPOSITIONS.values()):
@@ -141,7 +143,7 @@ while inpt != 'q':
             continue
         start = input("Enter starting coordinates (ints only right now)")
         print("Ordering workers, just wait")
-        time.sleep(2)
+        time.sleep(0.5)
         print("Workers should be goin hard")
         inpt = IDLE
         start = '-0 -0'
