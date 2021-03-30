@@ -63,7 +63,7 @@ class Swarm:
 
         if self.swarmsBestVal > np.min(evals):
             index = np.argmin(evals)
-            self.swarmsBestPos = self.swarmPos[:, index]
+            self.swarmsBestPos = np.copy(self.swarmPos[:, index])
             self.swarmsBestVal = self.function(self.swarmsBestPos)
 
     # this will only be applied to the velocity equation ONCE
