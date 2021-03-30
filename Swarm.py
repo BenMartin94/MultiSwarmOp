@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 class Swarm:
 
     def __init__(self, population, origin, distance, functional, params):
+        self.driftVel = np.zeros((params, 1))
         self.function = functional
         self.params = params
         self.origin = origin
@@ -45,10 +46,11 @@ class Swarm:
         for i in range(self.params):
             self.swarmVel[i, :] = self.swarmVel[i, :]*momentum[i] + (np.random.rand(self.population)*accelToBest[i]*(self.swarmIndivBests[i,:]-self.swarmPos[i,:])+
                                                                      np.random.rand(self.population) * accelToBest[i] * (self.swarmsBestPos[i] - self.swarmPos[i, :])
-                                                                     )
+                                                                     ) + self.driftVel[i]
 
         # now update position
         self.swarmPos += self.swarmVel
+        self.driftVel = np.zeros((self.params, 1))
 
     def updateBests(self):
         #lets evaluate the functionals
@@ -63,6 +65,16 @@ class Swarm:
             index = np.argmin(evals)
             self.swarmsBestPos = self.swarmPos[:, index]
             self.swarmsBestVal = self.function(self.swarmsBestPos)
+
+    # this will only be applied to the velocity equation ONCE
+    def setDriftVel(self, vels):
+        self.driftVel = np.array(vels)
+
+    def getSwarmCenter(self):
+        toRet = []
+        for i in range(len(self.swarmPos[:, 1])):
+            toRet.append(np.sum(self.swarmPos[i, :])/self.population)
+        return toRet
 
     # 2D functions only!
     def visualise(self):

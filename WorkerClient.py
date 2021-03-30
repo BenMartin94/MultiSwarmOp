@@ -22,10 +22,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 start[i] = int(start[i])
             print("beginning search at: ")
             print(start)
-            opt = Swarm(1000, start, (max(start)*0.2), function, len(start))
-            for i in range(1000):
+            opt = Swarm(100, start, (max(start)*0.2), function, len(start))
+            for i in range(100):
+                driftVel = s.recv((1024)).decode('utf-8')
+                driftVel = driftVel.split(' ')
+                for i in range(len(driftVel)):
+                    driftVel[i] = float(driftVel[i])
+                opt.setDriftVel(driftVel)
                 opt.iterate([0.9, 0.9], [0.4, 0.4], [0.2, 0.2])
-            #time.sleep(5) # make sure that the server is ready to recieve info again
+                # send back the minimum postition followd by the swarmCenter
+                toSend = ''
+                for i in range(len(opt.swarmsBestPos)):
+                    toSend += str(opt.swarmsBestPos[i])+ " "
+                center = opt.getSwarmCenter()
+                for i in range(len(center)):
+                    toSend += str(center[i])+" "
+                toSend = toSend[:-1]  # drop the last space
+                s.sendall(toSend.encode('utf-8'))
+            s.send("DONE".encode('utf-8'))
             toSend = ''
             for num in opt.swarmsBestPos:
                 toSend+=str(num).strip()+' '

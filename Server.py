@@ -1,7 +1,7 @@
 import socket
 import time
 import threading
-import numpy
+import numpy as np
 import random
 import traceback
 workers = []
@@ -14,8 +14,10 @@ def manageWorker(connection):
     global start
     global OPT
     global ALLRESULTS
+    global ALLPOSITIONS
     # TODO maybe set up an observer design pattern to only send when a change is detected
     connection.sendall(b'Hey worker, standby')
+    myId = workerID
     try:
         while True:
             connection.sendall(inpt.encode('utf-8'))
@@ -24,16 +26,31 @@ def manageWorker(connection):
                     time.sleep(0.1) # the input hasnt been given yet so wait
                 randStart = randomize(start)
                 connection.sendall(randStart.encode('utf-8'))
-                time.sleep(5)
+                connection.sendall('0 0'.encode('utf-8'))  # TODO generalize this to n dimensions
+                response = connection.recv(1024).decode('utf-8')
+                while "DONE" not in response:
+                    respList = response.split(' ')
+                    for i in range(len(respList)):
+                        respList[i] = float(respList[i])
+                    ALLPOSITIONS[id] = respList
+                    driftVel = computeDrift(myId)
+                    # Send something back now
+                    toSend = ''
+                    for val in driftVel:
+                        toSend += str(val) + ' '
+                    toSend = toSend[:-1]
+                    connection.sendall(toSend.encode('utf-8'))
+                    response = connection.recv(1024).decode('utf-8')
+
                 results = (connection.recv(1024))
                 results = results.decode('utf-8')
-                # print(results) # TODO delete me
                 results = results.split(' ')
                 ALLRESULTS[tuple(results[0:-1])] = results[-1]
             time.sleep(1)
     except:
         # something happened, down a worker
         traceback.print_exc()
+        ALLPOSITIONS.pop(myId)  # this worker disappeared so lets drop this entry
         print("Thread crashed closing client connection")
         activeWorkers = activeWorkers-1
 
@@ -48,10 +65,43 @@ def randomize(given):
     toRet = toRet[0:-1]
     return toRet
 
+def computeDrift(myId):
+    #if id is even, this will be a convergent based swarm
+    global ALLPOSITIONS
+    dims = len(ALLPOSITIONS[myId])/2
+    toRet = []
+    for i in range(dims):
+        toRet.append(0)
+    if myId % 2 == 0:
+        for bests in list(ALLPOSITIONS.values()):
+            for i in range(dims):
+                toRet[i] += bests[i]
+        for i in range(dims):
+            toRet[i] = toRet[i]/len(list(ALLPOSITIONS.keys()))
+        dest = np.array(toRet)
+        org = np.array(ALLPOSITIONS[myId][dims:-1])
+        distance = np.linalg.norm(dest-org, dims)
+        for i in range(dims):
+            toRet[i] = (dest[i] - org[i])/distance
+
+    else:
+        for pos in list(ALLPOSITIONS.values()):
+            # i want the second half of pos to get the swarm center
+            me = np.array(ALLPOSITIONS[myId][dims:-1])
+            other = np.array(pos[dims:-1])
+            distance = np.linalg.norm(other - me, dims)
+            if distance < 1:
+                # too close!
+                for i in range(dims):
+                    toRet[i] = (me[i] - other[i])/distance
+
+    return toRet
+
 
 def listen():
     global activeWorkers
     global ALLTHREADS
+    global workerID
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind((HOST,PORT))
         s.listen(5)
@@ -61,6 +111,7 @@ def listen():
             if 'Work' in str(c.recv(1024)):
                 print('client connected, starting thread for it')
                 activeWorkers = activeWorkers+1
+                workerID+=1
                 x = threading.Thread(target=manageWorker, args=(c,))
                 ALLTHREADS.append(x)
                 x.daemon=True
@@ -71,7 +122,9 @@ IDLE = '0'
 WORKERS = '2'
 ALLTHREADS = []
 ALLRESULTS = {}
+ALLPOSITIONS = {}
 activeWorkers = 0
+workerID = 0
 start = '-0 -0'
 listener = threading.Thread(target=listen)
 listener.daemon=True
@@ -84,7 +137,7 @@ inpt = input("Give Commands now: \n")
 while inpt != 'q':
     if inpt == OPT:
         if activeWorkers == 0:
-            print('Sorry you got not workers')
+            print('Sorry you got no workers')
             inpt = IDLE
             continue
         start = input("Enter starting coordinates (ints only right now)")
