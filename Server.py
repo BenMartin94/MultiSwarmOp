@@ -5,7 +5,7 @@ import numpy as np
 import random
 import traceback
 workers = []
-HOST = '192.168.0.7'
+HOST = '10.0.1.12'
 PORT = 9999
 
 def manageWorker(connection):

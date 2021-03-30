@@ -2,7 +2,7 @@ import socket
 import time
 from Swarm import Swarm
 from function import function
-HOST = '192.168.0.7'
+HOST = '10.0.1.12'
 PORT = 9999
 
 
