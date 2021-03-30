@@ -32,7 +32,7 @@ def manageWorker(connection):
                     respList = response.split(' ')
                     for i in range(len(respList)):
                         respList[i] = float(respList[i])
-                    ALLPOSITIONS[id] = respList
+                    ALLPOSITIONS[myId] = respList
                     driftVel = computeDrift(myId)
                     # Send something back now
                     toSend = ''
@@ -42,8 +42,7 @@ def manageWorker(connection):
                     connection.sendall(toSend.encode('utf-8'))
                     response = connection.recv(1024).decode('utf-8')
 
-                results = (connection.recv(1024))
-                results = results.decode('utf-8')
+                results = response[4:len(response)]
                 results = results.split(' ')
                 ALLRESULTS[tuple(results[0:-1])] = results[-1]
             time.sleep(1)
@@ -68,7 +67,7 @@ def randomize(given):
 def computeDrift(myId):
     #if id is even, this will be a convergent based swarm
     global ALLPOSITIONS
-    dims = len(ALLPOSITIONS[myId])/2
+    dims = len(ALLPOSITIONS[myId])//2
     toRet = []
     for i in range(dims):
         toRet.append(0)
@@ -79,7 +78,7 @@ def computeDrift(myId):
         for i in range(dims):
             toRet[i] = toRet[i]/len(list(ALLPOSITIONS.keys()))
         dest = np.array(toRet)
-        org = np.array(ALLPOSITIONS[myId][dims:-1])
+        org = np.array(ALLPOSITIONS[myId][dims:dims*2])
         distance = np.linalg.norm(dest-org, dims)
         for i in range(dims):
             toRet[i] = (dest[i] - org[i])/distance
@@ -87,10 +86,10 @@ def computeDrift(myId):
     else:
         for pos in list(ALLPOSITIONS.values()):
             # i want the second half of pos to get the swarm center
-            me = np.array(ALLPOSITIONS[myId][dims:-1])
-            other = np.array(pos[dims:-1])
+            me = np.array(ALLPOSITIONS[myId][dims:len(pos)])
+            other = np.array(pos[dims:len(pos)])
             distance = np.linalg.norm(other - me, dims)
-            if distance < 1:
+            if 1 > distance > 0:
                 # too close!
                 for i in range(dims):
                     toRet[i] = (me[i] - other[i])/distance
